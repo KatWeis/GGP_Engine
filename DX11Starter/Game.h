@@ -3,6 +3,7 @@
 #include "DXCore.h"
 #include "SimpleShader.h"
 #include "Mesh.h"
+#include "GameEntity.h"
 #include <DirectXMath.h>
 
 class Game 
@@ -35,10 +36,13 @@ private:
 	// Buffers to hold actual geometry data
 	ID3D11Buffer* vertexBuffer;
 
-	//Meshes to draw to the screen
+	// Meshes to draw to the screen
 	Mesh* triangle;
 	Mesh* trapezoid;
 	Mesh* square;
+
+	// Vector of GameEntities in the Game
+	std::vector<GameEntity>* entities;
 
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
