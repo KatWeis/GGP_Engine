@@ -25,6 +25,8 @@ Game::Game(HINSTANCE hInstance)
 	vertexShader = 0;
 	pixelShader = 0;
 
+	mainCamera = new Camera();
+
 #if defined(DEBUG) || defined(_DEBUG)
 	// Do we want a console window?  Probably only in debug mode
 	CreateConsoleWindow(500, 120, 32, 120);
@@ -45,8 +47,14 @@ Game::~Game()
 	delete trapezoid;
 	delete square;
 
+	// Delete our Materials
+	delete default;
+
 	// Delete the game entities, they will clean up themselves
 	delete entities;
+
+	// Delete the Camera
+	delete mainCamera;
 
 	// Release any (and all!) DirectX objects
 	// we've made in the Game class
@@ -71,18 +79,26 @@ void Game::Init()
 	CreateMatrices();
 	CreateBasicGeometry();
 
+	// Set the projection matrix of the main camera
+	mainCamera->UpdateProjectionMatrix(width, height);
+
+	// Create a basic Material
+	default = new Material(vertexShader, pixelShader);
+
 	// Create and add some entities to the game
 	entities = new std::vector<GameEntity>();
-	entities->push_back(GameEntity(triangle));
-	entities->push_back(GameEntity(trapezoid));
-	entities->push_back(GameEntity(square));
-	entities->push_back(GameEntity(square));
-	entities->push_back(GameEntity(triangle));
+	entities->push_back(GameEntity(triangle, default));
+	entities->push_back(GameEntity(trapezoid, default));
+	entities->push_back(GameEntity(square, default));
+	entities->push_back(GameEntity(square, default));
+	entities->push_back(GameEntity(triangle, default));
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
 }
 
 // --------------------------------------------------------
@@ -217,12 +233,7 @@ void Game::OnResize()
 	DXCore::OnResize();
 
 	// Update our projection matrix since the window size changed
-	XMMATRIX P = XMMatrixPerspectiveFovLH(
-		0.25f * 3.1415926535f,	// Field of View Angle
-		(float)width / height,	// Aspect ratio
-		0.1f,				  	// Near clip plane distance
-		100.0f);			  	// Far clip plane distance
-	XMStoreFloat4x4(&projectionMatrix, XMMatrixTranspose(P)); // Transpose for HLSL!
+	mainCamera->UpdateProjectionMatrix(width, height);
 }
 
 // --------------------------------------------------------
@@ -233,6 +244,9 @@ void Game::Update(float deltaTime, float totalTime)
 	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
+
+	// Update the Camera
+	mainCamera->Update(deltaTime);
 
 	// Move some of the Game Entities around
 	(*entities)[2].Rotate(0, 0, 1.0f * deltaTime);//rotates square around z axis counterclockwise
@@ -264,26 +278,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Calculate the world matrix of the entity
 		(*entities)[i].CalculateWorldMatrix();
 
-		// Send data to shader variables
-		//  - Do this ONCE PER OBJECT you're drawing
-		//  - This is actually a complex process of copying data to a local buffer
-		//    and then copying that entire buffer to the GPU.  
-		//  - The "SimpleShader" class handles all of that for you.
-		vertexShader->SetMatrix4x4("world", (*entities)[i].GetWorldMatrix());
-		vertexShader->SetMatrix4x4("view", viewMatrix);
-		vertexShader->SetMatrix4x4("projection", projectionMatrix);
-
-		// Once you've set all of the data you care to change for
-		// the next draw call, you need to actually send it to the GPU
-		//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
-		vertexShader->CopyAllBufferData();
-
-		// Set the vertex and pixel shaders to use for the next Draw() command
-		//  - These don't technically need to be set every frame...YET
-		//  - Once you start applying different shaders to different objects,
-		//    you'll need to swap the current shaders before each draw
-		vertexShader->SetShader();
-		pixelShader->SetShader();
+		(*entities)[i].PrepareMaterial(mainCamera->GetViewMatrix(), mainCamera->GetProjectionMatrix());
 
 		// Set buffers in the input assembler
 		//  - Do this ONCE PER OBJECT you're drawing, since each object might
@@ -330,6 +325,10 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 
+	// Save the mouse position when the button is clicked for the future
+	downMousePos.x = x;
+	downMousePos.y = y;
+
 	// Caputure the mouse so we keep getting mouse move
 	// events even if the mouse leaves the window.  we'll be
 	// releasing the capture once a mouse button is released
@@ -342,6 +341,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 {
 	// Add any custom code here...
+	SetCursorPos(prevMousePos.x, prevMousePos.y);
 
 	// We don't care about the tracking the cursor outside
 	// the window anymore (we're not dragging if the mouse is up)
@@ -356,6 +356,11 @@ void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
 	// Add any custom code here...
+
+	// Rotate Camera
+	if (buttonState & 0x0001) {
+		mainCamera->MouseLook(prevMousePos.y - y, prevMousePos.x - x);
+	}
 
 	// Save the previous mouse position, so we have it for the future
 	prevMousePos.x = x;

@@ -4,6 +4,7 @@
 #include "SimpleShader.h"
 #include "Mesh.h"
 #include "GameEntity.h"
+#include "Camera.h"
 #include <DirectXMath.h>
 
 class Game 
@@ -33,6 +34,9 @@ private:
 	void CreateMatrices();
 	void CreateBasicGeometry();
 
+	// First Person Debug Camera
+	Camera* mainCamera;
+
 	// Buffers to hold actual geometry data
 	ID3D11Buffer* vertexBuffer;
 
@@ -40,6 +44,9 @@ private:
 	Mesh* triangle;
 	Mesh* trapezoid;
 	Mesh* square;
+
+	// Materials to assign to GameEntities
+	Material* default;
 
 	// Vector of GameEntities in the Game
 	std::vector<GameEntity>* entities;
@@ -56,5 +63,8 @@ private:
 	// Keeps track of the old mouse position.  Useful for 
 	// determining how far the mouse moved in a single frame.
 	POINT prevMousePos;
+
+	// Keeps track of the position the mouse had when the button was initially clicked
+	POINT downMousePos;
 };
 
