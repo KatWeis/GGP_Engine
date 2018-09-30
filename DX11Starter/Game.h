@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include "GameEntity.h"
 #include "Camera.h"
+#include "Lights.h"
 #include <DirectXMath.h>
 
 class Game 
@@ -36,6 +37,10 @@ private:
 
 	// First Person Debug Camera
 	Camera* mainCamera;
+
+	// Lights
+	DirectionalLight dirLight;
+	DirectionalLight light2;
 
 	// Buffers to hold actual geometry data
 	ID3D11Buffer* vertexBuffer;

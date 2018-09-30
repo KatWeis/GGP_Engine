@@ -12,6 +12,29 @@ struct VertexToPixel
 	//  |    |                |
 	//  v    v                v
 	float4 position		: SV_POSITION;
+	float3 normal		: NORMAL;
+};
+
+// --------------------------------------------------------
+// A custom directional light definition
+// --------------------------------------------------------
+struct DirectionalLight
+{
+	float4 ambient;	    // The color of the ambient lighting
+	float4 diffuse;     // The color of the diffuse lighting
+	float3 direction;   // The direction of the light
+};
+
+// Constant Buffer
+// - Allows us to define a buffer of individual variables 
+//    which will (eventually) hold data from our C++ code
+// - All non-pipeline variables that get their values from 
+//    our C++ code must be defined inside a Constant Buffer
+// - The name of the cbuffer itself is unimportant
+cbuffer externalData : register(b0)
+{
+	DirectionalLight light;
+	DirectionalLight light2;
 };
 
 // --------------------------------------------------------
@@ -25,9 +48,22 @@ struct VertexToPixel
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+	// Normalize the normal to ensure its a unit vector
+	input.normal = normalize(input.normal);
+
+	// Calculate the unit vector of the direction to the light
+	float3 dirToLight = normalize((-1)*light.direction);
+
+	// Calculate the amount of diffuse lighting on the current pixel
+	float lightAmt = saturate(dot(input.normal, dirToLight));
+
+	// Do the same for the second directional light
+	float3 dirToLight2 = normalize((-1)*light2.direction);
+	float lightAmt2 = saturate(dot(input.normal, dirToLight2));
+
 	// Just return the input color
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	return light.diffuse * lightAmt + (light2.diffuse * lightAmt2) + light.ambient;
 }

@@ -46,6 +46,8 @@ Game::~Game()
 	delete triangle;
 	delete trapezoid;
 	delete square;
+	delete cone;
+	delete helix;
 
 	// Delete our Materials
 	delete default;
@@ -81,6 +83,22 @@ void Game::Init()
 
 	// Set the projection matrix of the main camera
 	mainCamera->UpdateProjectionMatrix(width, height);
+
+	// Initialize the lights in the scene
+	dirLight = { XMFLOAT4(+0.1f, +0.1f, +0.1f, +1.0f), XMFLOAT4(+0.0f, +1.0f, +0.0f, +1.0f), XMFLOAT3(+1.0f, -1.0f, +0.0f) };
+	light2 = { XMFLOAT4(+0.1f, +0.1f, +0.1f, +1.0f), XMFLOAT4(+0.75f, +0.5f, +0.0f, +1.0f), XMFLOAT3(+0.0f, +1.0f, +1.0f) };
+
+	// Pass the light to the pixel shader
+	pixelShader->SetData(
+		"light",  // The name of the (eventual) variable in the shader
+		&dirLight,   // The address of the data to copy
+		sizeof(DirectionalLight)); // The size of the data to copy
+
+	// Pass the light to the pixel shader
+	pixelShader->SetData(
+		"light2",  // The name of the (eventual) variable in the shader
+		&light2,   // The address of the data to copy
+		sizeof(DirectionalLight)); // The size of the data to copy
 
 	// Create a basic Material
 	default = new Material(vertexShader, pixelShader);
