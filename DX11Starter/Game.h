@@ -44,6 +44,8 @@ private:
 	Mesh* triangle;
 	Mesh* trapezoid;
 	Mesh* square;
+	Mesh* cone;
+	Mesh* helix;
 
 	// Materials to assign to GameEntities
 	Material* default;

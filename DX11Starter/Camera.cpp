@@ -15,6 +15,8 @@ Camera::Camera()
 
 	rotationX = +0.0f;
 	rotationY = +0.0f;
+
+	speed = 5;
 }
 
 
@@ -104,22 +106,22 @@ void Camera::ProcessInput(float deltaTime)
 	XMVECTOR right = XMVector3Cross(dir, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 
 	if (GetAsyncKeyState('W') & 0x8000) {
-		pos += dir * deltaTime;
+		pos += dir * speed * deltaTime;
 	}
 	if (GetAsyncKeyState('S') & 0x8000) {
-		pos += (-1)* dir * deltaTime;
+		pos += (-1)* dir * speed * deltaTime;
 	}
 	if (GetAsyncKeyState('A') & 0x8000) {
-		pos += right * deltaTime;
+		pos += right * speed * deltaTime;
 	}
 	if (GetAsyncKeyState('D') & 0x8000) {
-		pos += (-1) * right * deltaTime;
+		pos += (-1) * right * speed * deltaTime;
 	}
 	if (GetAsyncKeyState('X') & 0x8000) {
-		pos -= XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f) * deltaTime;
+		pos -= XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f) * speed * deltaTime;
 	}
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-		pos += XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f) * deltaTime;
+		pos += XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f) * speed * deltaTime;
 	}
 
 	// Store result

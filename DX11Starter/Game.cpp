@@ -87,11 +87,11 @@ void Game::Init()
 
 	// Create and add some entities to the game
 	entities = new std::vector<GameEntity>();
-	entities->push_back(GameEntity(triangle, default));
-	entities->push_back(GameEntity(trapezoid, default));
+	entities->push_back(GameEntity(cone, default));
+	entities->push_back(GameEntity(helix, default));
 	entities->push_back(GameEntity(square, default));
-	entities->push_back(GameEntity(square, default));
-	entities->push_back(GameEntity(triangle, default));
+
+	(*entities)[0].Move(3, 0, 0);
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -166,20 +166,19 @@ void Game::CreateMatrices()
 // --------------------------------------------------------
 void Game::CreateBasicGeometry()
 {
-	// Create some temporary variables to represent colors
+	// Create some temporary variables to represent uvs and normals
 	// - Not necessary, just makes things more readable
-	XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+	XMFLOAT2 uv = XMFLOAT2(0.0f, 0.0f);
+	XMFLOAT3 normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	// Set up the vertices of the triangle we would like to draw
 	// - We're going to copy this array, exactly as it exists in memory
 	//    over to a DirectX-controlled data structure (the vertex buffer)
 	Vertex vertices[] =
 	{
-		{ XMFLOAT3(+0.0f, +1.0f, +0.0f), red },
-		{ XMFLOAT3(+1.5f, -1.0f, +0.0f), blue },
-		{ XMFLOAT3(-1.5f, -1.0f, +0.0f), green },
+		{ XMFLOAT3(+0.0f, +1.0f, +0.0f), normal, uv },
+		{ XMFLOAT3(+1.5f, -1.0f, +0.0f), normal, uv },
+		{ XMFLOAT3(-1.5f, -1.0f, +0.0f), normal, uv },
 	};
 
 	// Set up the indices, which tell us which vertices to use and in which order
@@ -195,10 +194,10 @@ void Game::CreateBasicGeometry()
 	//set vertices and indices for next Mesh
 	Vertex verticesTrap[] =
 	{
-		{ XMFLOAT3(+2.0f, -0.5f, +0.0f), green },
-		{ XMFLOAT3(+2.5f, -0.5f, +0.0f), blue },
-		{ XMFLOAT3(+3.0f, +0.5f, +0.0f), green },
-		{ XMFLOAT3(+1.5f, +0.5f, +0.0f), blue },
+		{ XMFLOAT3(+2.0f, -0.5f, +0.0f), normal, uv },
+		{ XMFLOAT3(+2.5f, -0.5f, +0.0f), normal, uv },
+		{ XMFLOAT3(+3.0f, +0.5f, +0.0f), normal, uv },
+		{ XMFLOAT3(+1.5f, +0.5f, +0.0f), normal, uv },
 	};
 
 	unsigned int indicesTrap[] = { 2, 1, 0, 0, 3, 2 };
@@ -209,16 +208,20 @@ void Game::CreateBasicGeometry()
 	//set vertices and indices for next Mesh
 	Vertex verticesSq[] =
 	{
-		{ XMFLOAT3(-3.5f, -0.5f, +0.0f), red },
-		{ XMFLOAT3(-2.0f, -0.5f, +0.0f), red },
-		{ XMFLOAT3(-2.0f, +0.5f, +0.0f), red },
-		{ XMFLOAT3(-3.5f, +0.5f, +0.0f), red },
+		{ XMFLOAT3(-3.5f, -0.5f, +0.0f), normal, uv },
+		{ XMFLOAT3(-2.0f, -0.5f, +0.0f), normal, uv },
+		{ XMFLOAT3(-2.0f, +0.5f, +0.0f), normal, uv },
+		{ XMFLOAT3(-3.5f, +0.5f, +0.0f), normal, uv },
 	};
 
 	unsigned int indicesSq[] = { 2, 1, 0, 0, 3, 2 };
 
 	// Create a square Mesh using the vertices and indices specified earlier
 	square = new Mesh(verticesSq, 4, indicesSq, 6, device);
+
+	// Create meshes from the data in obj files
+	cone = new Mesh("./Assets/Models/cone.obj", device);
+	helix = new Mesh("./Assets/Models/helix.obj", device);
 	
 }
 
@@ -249,10 +252,9 @@ void Game::Update(float deltaTime, float totalTime)
 	mainCamera->Update(deltaTime);
 
 	// Move some of the Game Entities around
-	(*entities)[2].Rotate(0, 0, 1.0f * deltaTime);//rotates square around z axis counterclockwise
-	(*entities)[3].Rotate(0, 0, -0.25f * deltaTime);//rotates square around z axis clockwise
-	(*entities)[1].Move(sin(totalTime) * deltaTime,0, 0);//moves trapezoid in sine curve along x axis
-	(*entities)[0].Move(0, sin(totalTime) * deltaTime, 0);//moves trapezoid in sine curve along x axis
+	(*entities)[1].Rotate(0, 1.0f * deltaTime, 0.0f);//rotates helix around y axis counterclockwise
+	(*entities)[2].Rotate(0, 0, -0.25f * deltaTime);//rotates square around z axis clockwise
+	(*entities)[0].Move(0, sin(totalTime) * deltaTime, 0);//moves cone in sine curve along y axis
 }
 
 // --------------------------------------------------------

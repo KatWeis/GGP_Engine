@@ -38,6 +38,9 @@ private:
 	float rotationX;
 	float rotationY;
 
+	// Float for determining camera move speed
+	float speed;
+
 	// Vectors and Floats of the transforms from last frame 
 	XMFLOAT3 lastPosition;
 	float lastRotationX;
