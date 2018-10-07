@@ -9,17 +9,17 @@ GameEntity::GameEntity(Mesh* m, Material* mat)
 	XMStoreFloat4x4(&worldMatrix, XMMatrixIdentity());
 
 	// Store default values in the pos, rot, and scale
-	position.x = 0;
-	position.y = 0;
-	position.z = 0;
+	position.x = lastPosition.x = 0;
+	position.y = lastPosition.y = 0;
+	position.z = lastPosition.z = 0;
 
-	rotation.x = 0;
-	rotation.y = 0;
-	rotation.z = 0;
+	rotation.x = lastRotation.x = 0;
+	rotation.y = lastRotation.y = 0;
+	rotation.z = lastRotation.z = 0;
 
-	scale.x = 1;
-	scale.y = 1;
-	scale.z = 1;
+	scale.x = lastScale.x = 1;
+	scale.y = lastScale.y = 1;
+	scale.z = lastScale.z = 1;
 }
 
 
@@ -87,6 +87,9 @@ void GameEntity::PrepareMaterial(XMFLOAT4X4 viewMatix, XMFLOAT4X4 projMatrix)
 	material->GetVertexShader()->SetMatrix4x4("world", worldMatrix);
 	material->GetVertexShader()->SetMatrix4x4("view", viewMatix);
 	material->GetVertexShader()->SetMatrix4x4("projection", projMatrix);
+
+	material->GetPixelShader()->SetSamplerState("basicSampler", material->GetSamplerState());
+	material->GetPixelShader()->SetShaderResourceView("diffuseTexture", material->GetSRV());
 
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU

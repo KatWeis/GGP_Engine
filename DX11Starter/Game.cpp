@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "Vertex.h"
+#include "WICTextureLoader.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -47,10 +48,13 @@ Game::~Game()
 	delete trapezoid;
 	delete square;
 	delete cone;
+	delete sphere;
 	delete helix;
 
 	// Delete our Materials
-	delete default;
+	delete cobble;
+	delete ice;
+	delete tiles;
 
 	// Delete the game entities, they will clean up themselves
 	delete entities;
@@ -100,16 +104,48 @@ void Game::Init()
 		&light2,   // The address of the data to copy
 		sizeof(DirectionalLight)); // The size of the data to copy
 
+	// Load a texture
+	ID3D11ShaderResourceView* srvIce;
+	CreateWICTextureFromFile(device, context, L"./Assets/Textures/ice.jpg", 0, &srvIce);
+
+	ID3D11ShaderResourceView* srvCobble;
+	CreateWICTextureFromFile(device, context, L"./Assets/Textures/cobble.jpg", 0, &srvCobble);
+
+	ID3D11ShaderResourceView* srvTiles;
+	CreateWICTextureFromFile(device, context, L"./Assets/Textures/tiles_med.tif", 0, &srvTiles);
+
+	// Create a SamplerState
+	ID3D11SamplerState* sample;
+	// Create the SAMPLER STATE description -----------------------------------
+	// - The description is created on the stack because we only need
+	//    it to create the buffer.  The description is then useless.
+	D3D11_SAMPLER_DESC sd;
+	sd.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; // Tells DirectX how to handle UV coordinates outside of the 0 - 1 range
+	sd.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; 
+	sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP; 
+	sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sd.MaxLOD = D3D11_FLOAT32_MAX;
+	sd.MinLOD = 0;
+	sd.MipLODBias = 0;
+	//sd.BorderColor = 0;
+	sd.MaxAnisotropy = 0;
+	//sd.ComparisonFunc = 0;
+
+	device->CreateSamplerState(&sd, &sample);
+
 	// Create a basic Material
-	default = new Material(vertexShader, pixelShader);
+	ice = new Material(vertexShader, pixelShader, srvIce, sample);
+	cobble = new Material(vertexShader, pixelShader, srvCobble, sample);
+	tiles = new Material(vertexShader, pixelShader, srvTiles, sample);
 
 	// Create and add some entities to the game
 	entities = new std::vector<GameEntity>();
-	entities->push_back(GameEntity(cone, default));
-	entities->push_back(GameEntity(helix, default));
-	entities->push_back(GameEntity(square, default));
+	entities->push_back(GameEntity(cone, ice));
+	entities->push_back(GameEntity(helix, tiles));
+	entities->push_back(GameEntity(sphere, cobble));
 
 	(*entities)[0].Move(3, 0, 0);
+	(*entities)[2].Move(-3, 0, 0);
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -240,6 +276,7 @@ void Game::CreateBasicGeometry()
 	// Create meshes from the data in obj files
 	cone = new Mesh("./Assets/Models/cone.obj", device);
 	helix = new Mesh("./Assets/Models/helix.obj", device);
+	sphere = new Mesh("./Assets/Models/sphere.obj", device);
 	
 }
 
@@ -271,7 +308,7 @@ void Game::Update(float deltaTime, float totalTime)
 
 	// Move some of the Game Entities around
 	(*entities)[1].Rotate(0, 1.0f * deltaTime, 0.0f);//rotates helix around y axis counterclockwise
-	(*entities)[2].Rotate(0, 0, -0.25f * deltaTime);//rotates square around z axis clockwise
+	(*entities)[2].Rotate(-0.25f * deltaTime, 0, 0);//rotates sphere around x axis clockwise
 	(*entities)[0].Move(0, sin(totalTime) * deltaTime, 0);//moves cone in sine curve along y axis
 }
 

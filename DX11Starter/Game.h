@@ -50,10 +50,13 @@ private:
 	Mesh* trapezoid;
 	Mesh* square;
 	Mesh* cone;
+	Mesh* sphere;
 	Mesh* helix;
 
 	// Materials to assign to GameEntities
-	Material* default;
+	Material* ice;
+	Material* cobble;
+	Material* tiles;
 
 	// Vector of GameEntities in the Game
 	std::vector<GameEntity>* entities;
